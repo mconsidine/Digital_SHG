@@ -2,6 +2,7 @@
 """
 @author: valerie desnoux
 with improvements by Andrew Smith
+additional changes by Matt Considine
 Version 24 July 2021
 
 ------------------------------------------------------------------------
@@ -82,10 +83,10 @@ def solex_proc(serfile, options):
 
     #affiche image moyenne
     if flag_display:
-        cv2.namedWindow('Ser mean', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('Ser mean', iw, ih)
-        cv2.moveWindow('Ser mean', 100, 0)
-        cv2.imshow ('Ser mean', mean_img)
+        cv2.namedWindow('Video mean', cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('Video mean', iw, ih)
+        cv2.moveWindow('Video mean', 100, 0)
+        cv2.imshow ('Video mean', mean_img)
         if cv2.waitKey(2000) == 27:                     # exit if Escape is hit
             cv2.destroyAllWindows()
             sys.exit()
