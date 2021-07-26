@@ -1,6 +1,7 @@
 """
 @author: valerie desnoux
 with improvements by Andrew Smith
+additional changes by Matt Considine
 
 """
 from solex_util import *
