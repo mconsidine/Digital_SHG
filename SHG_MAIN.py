@@ -48,7 +48,7 @@ def UI_SerBrowse (WorkDir):
     sg.theme_button_color(('white', '#500000'))
     
     layout = [
-    [sg.Text('SER file name(s)', size=(15, 1)), sg.InputText(default_text='',size=(75,1),key='-FILE-'),
+    [sg.Text('Video file name(s)', size=(15, 1)), sg.InputText(default_text='',size=(75,1),key='-FILE-'),
      sg.FilesBrowse('Open',file_types=(("SER Files", "*.ser"),("AVI Files","*.avi"),),initial_folder=WorkDir)], #MattC
     [sg.Checkbox('Show graphics', default=False, key='-DISP-')],
     [sg.Checkbox('Save .fits files', default=False, key='-FIT-')],
@@ -93,14 +93,14 @@ shift, flag_display, ratio_fixe, slant_fix, save_fit, clahe_only = 0, False, '',
 ## add a command line argument.
 if len(sys.argv)>1 : #lauch by clipLimit
     for file_ in sys.argv[1:] : 
-        if file_.split('.')[-1].upper()=='SER' : 
+        if file_.split('.')[-1].upper()=='SER' or file_.split('.')[-1].upper()=='AVI': #MattC to add AVI files as part of list
             serfiles.append(file_)
     print('theses files are going to be processed : ', serfiles)
     print('with default values : shift %s, flag_display %s, ratio_fixe "%s", slant_fix "%s", save_fit %s, clahe_only %s' %(shift, flag_display, ratio_fixe, slant_fix, save_fit, clahe_only) )
 
 # check for .ini file for working directory           
 try:
-    mydir_ini=os.path.dirname(sys.argv[0])+'/SHG.ini'
+    mydir_ini=os.path.dirname(sys.argv[0])+'./SHG.ini' #MattC to work under Linux?
     with open(mydir_ini, "r") as f1:   
         param_init = f1.readlines()
         WorkDir=param_init[0]
