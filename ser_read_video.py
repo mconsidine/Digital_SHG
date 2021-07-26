@@ -21,7 +21,7 @@ class ser_reader:
         elif (self.serfile.upper().endswith('.AVI')==True):
             self.SER_flag=False
             self.AVI_flag=True
-            self.scalemax=65000
+            self.scalemax=65000 #MattC need to double check this vs 255 20200726
             self.infiledatatype='uint8'
         else:
             self.SER_flag=False
