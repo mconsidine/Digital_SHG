@@ -3,6 +3,7 @@
 Version 24 July 2021
 @author: valerie desnoux
 with improvements by Andrew Smith
+additional changes by Matt Considine
 Front end de traitements spectro helio de fichier ser
 - interface pour selectionner un ou plusieurs fichiers
 - appel au module solex_recon qui traite la sequence et genere les fichiers fits
@@ -142,7 +143,7 @@ def do_work():
             f=open(serfile, "rb")
             f.close()
         except:
-            print('erreur ouverture fichier : ',serfile)
+            print('error opening file : ',serfile)
             sys.exit()
 
         # save working directory
