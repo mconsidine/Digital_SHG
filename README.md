@@ -1,4 +1,4 @@
-Solar disk reconstruction from SHG (spectroheliography) SER files. Only 16bit files are accepted. No AVI files are accepted.
+Solar disk reconstruction from SHG (spectroheliography) SER files. AVI files are also supported. (MattC)
 If no spectral line can recognised in the SER file, the program will stop.
 
 Install the most recent version of Python from python.org. During Windows installation, check the box to update the PATH.
