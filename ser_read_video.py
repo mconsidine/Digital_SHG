@@ -8,7 +8,7 @@ from solex_util import *
 
 class ser_reader:
 
-    def __init__(self, serfile):
+    def __init__(self, serfile, options):
         #ouverture et lecture de l'entete du fichier ser
 
         self.serfile = serfile
@@ -21,14 +21,14 @@ class ser_reader:
         elif (self.serfile.upper().endswith('.AVI')==True):
             self.SER_flag=False
             self.AVI_flag=True
-            self.scalemax=65000 #MattC need to double check this vs 255 20200726
+            self.scalemax=65535 #MattC actually this can scale to max of outfiledatatype
             self.infiledatatype='uint8'
         else:
             self.SER_flag=False
             self.AVI_flag=False
         
-        self.outfiledatatype='uint16' #MattC 20210726
-        
+        self.outfiledatatype=options['outfiledatatype']
+
         if (self.SER_flag==True): #MattC
             self.FileID=np.fromfile(serfile, dtype='int8',count=14)
             offset=14
@@ -108,7 +108,7 @@ class ser_reader:
 
 # read video and return constructed image of sun using fit and LineRecal
 def read_video_improved(serfile, fit, LineRecal, options):
-    rdr = ser_reader(serfile)
+    rdr = ser_reader(serfile, options)
     ih, iw = rdr.ih, rdr.iw
     
     if options['flag_display']:
@@ -117,15 +117,15 @@ def read_video_improved(serfile, fit, LineRecal, options):
         cv2.resizeWindow('disk', FrameMax//3, ih//3)
         cv2.moveWindow('disk', 200, 0)
         #initialize le tableau qui va recevoir la raie spectrale de chaque trame
-        Disk=np.zeros((ih,FrameMax), dtype=rdr.infiledatatype) #MattC should use var
+        Disk=np.zeros((ih,FrameMax), dtype=rdr.infiledatatype) #MattC should use out?
         
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
         cv2.moveWindow('image', 0, 0)
         cv2.resizeWindow('image', int(iw), int(ih))
     else:
-        #Disk=np.zeros((ih,1), dtype='uint16')
+        #Disk=np.zeros((ih,1), dtype=options['outfiledatatype'])
         FrameMax=rdr.FrameCount
-        Disk=np.zeros((ih,FrameMax), dtype=rdr.infiledatatype) #MattC should use var
+        Disk=np.zeros((ih,FrameMax), dtype=rdr.infiledatatype) #MattC should use out?
         
     shift = options['shift']
     ind_l = (np.asarray(fit)[:, 0] + np.ones(ih) * (LineRecal + shift)).astype(int)
@@ -152,7 +152,7 @@ def read_video_improved(serfile, fit, LineRecal, options):
         IntensiteRaie = left_col*left_weights + right_col*right_weights
         
         #ajoute au tableau disk 
-        Disk[:,rdr.FrameIndex]=IntensiteRaie.astype('uint16')
+        Disk[:,rdr.FrameIndex]=IntensiteRaie.astype(rdr.infiledatatype)
         
         if options['flag_display'] and rdr.FrameIndex % 10 ==0:
             cv2.imshow ('disk', Disk)
@@ -163,12 +163,12 @@ def read_video_improved(serfile, fit, LineRecal, options):
 
 
 # compute mean image of video
-def compute_mean(serfile):
-    rdr = ser_reader(serfile)
+def compute_mean(serfile, options):
+    rdr = ser_reader(serfile,options)
     logme('Width, Height : '+str(rdr.Width)+' '+str(rdr.Height)) 
     logme('Number of frames : '+str(rdr.FrameCount))
     my_data = np.zeros((rdr.ih, rdr.iw),dtype='uint64')
     while rdr.has_frames():
         img = rdr.next_frame()
         my_data += img
-    return (my_data / rdr.FrameCount).astype('uint16'), rdr #MattC should use var
+    return (my_data / rdr.FrameCount).astype(rdr.infiledatatype), rdr #MattC should use var

@@ -164,7 +164,7 @@ def do_work():
             print('invalid shift input: ', shift)
             shift=0
 
-        options = {'flag_display':flag_display, 'shift':shift, 'save_fit':save_fit, 'tempo':tempo}
+        options = {'flag_display':flag_display, 'shift':shift, 'save_fit':save_fit, 'tempo':tempo, 'outfiledatatype':outfiledatatype} #MattC
         
         if not ratio_fixe == '':
             try:
@@ -243,8 +243,8 @@ def do_work():
             y0=int(cercle[1])
             r=int(cercle[2]) - 4
             frame=cv2.circle(frame, (x0,y0),r,0,-1)
-        clahe = cv2.createCLAHE(clipLimit=0.8, tileGridSize=(2,2))
-        promframe = clahe.apply(frame)   
+        promclahe = cv2.createCLAHE(clipLimit=0.8, tileGridSize=(2,2))
+        promframe = promclahe.apply(frame)   
         frame1=np.copy(promframe)
         Seuil_bas=0
         Seuil_haut=np.percentile(frame1,99.9999) #MattC drop *0.18     

@@ -57,7 +57,7 @@ def solex_proc(serfile, options):
     """
     # first compute mean image
     # rdr is the ser_reader object
-    mean_img, rdr = compute_mean(serfile)
+    mean_img, rdr = compute_mean(serfile, options)
     hdr = make_header(rdr)
     ih = rdr.ih
     iw = rdr.iw
@@ -346,7 +346,7 @@ def solex_proc(serfile, options):
     
     # divise image par le flat
     BelleImage=np.divide(frame,flat)
-    frame=np.array(BelleImage, dtype='uint16') #MattC should use var
+    frame=np.array(BelleImage, dtype=options['outfiledatatype']) #MattC 
     # sauvegarde de l'image deflattée
 
     if options['save_fit']:
