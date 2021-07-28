@@ -108,7 +108,7 @@ def get_edge_list(image, sigma = 2):
     return np.array([X, raw_X], dtype=object) 
 
 def ellipse_to_circle(image, options):
-    image = image / options.get("scalemax") #MattC chng to deal with AVI/8bit 20210726
+    image = image / 65535 #MattC chng to deal with AVI/8bit 20210726
     factor = 4
     processed = get_edge_list(downscale_local_mean(image, (factor,factor))) * factor# down-scaled, then upscaled back
     X, raw_X = processed[0], processed[1]
