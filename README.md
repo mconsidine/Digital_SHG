@@ -1,4 +1,7 @@
-Solar disk reconstruction from SHG (spectroheliography) SER files. AVI files are also supported (MattC).
+This is a highly experimental version of the Solex_ser_recon code developed by Valerie Desnoux and improved by Douglas Smith (thelondonsmiths), djibb, and others.  It may or may not stay in sync with that codebase.  For a version of Sole_ser_recon_EN that supports both SER and AVI files and is intended to stay close to thelondonsmith's code, see
+  https://github.com/mattconsidine/Solex_ser_recon_AVI
+
+Solar disk reconstruction from SHG (spectroheliography) SER files. AVI files are also supported.
 If no spectral line can be recognised in the video file, the program will stop.
 
 Install the most recent version of Python from python.org. During Windows installation, check the box to update the PATH.
