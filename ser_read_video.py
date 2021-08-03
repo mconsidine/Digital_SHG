@@ -1,33 +1,34 @@
 """
-@author: valerie desnoux
+@author: Valerie Desnoux
 with improvements by Andrew Smith
+Version 1 August 2021
 additional changes by Matt Considine
 
 """
-from solex_util import *
+import numpy as np
+import cv2 #MattC
 
 class ser_reader:
 
-    def __init__(self, serfile, options):
-        #ouverture et lecture de l'entete du fichier ser
-
+    def __init__(self, serfile):
+    
         self.serfile = serfile
-
+        
         if (self.serfile.upper().endswith('.SER')==True): #MattC 20210726
             self.SER_flag=True
             self.AVI_flag=False
-            self.scalemax=65535
+            #self.scalemax=65535
             self.infiledatatype='uint16'
         elif (self.serfile.upper().endswith('.AVI')==True):
             self.SER_flag=False
             self.AVI_flag=True
-            self.scalemax=65535 #MattC actually this can scale to max of outfiledatatype
+            #self.scalemax=65535 #MattC
             self.infiledatatype='uint8'
         else:
             self.SER_flag=False
             self.AVI_flag=False
         
-        self.outfiledatatype=options['outfiledatatype']
+        #ouverture et lecture de l'entete du fichier ser
 
         if (self.SER_flag==True): #MattC
             self.FileID=np.fromfile(serfile, dtype='int8',count=14)
@@ -74,7 +75,7 @@ class ser_reader:
             self.fileoffset = 0 #MattC to avoid stomping on offset accumulator
         else : #MattC
     	    ok_flag=False
-    	    
+     
         if self.Width>self.Height:
             self.flag_rotate=True
             self.ih=self.Width
@@ -106,69 +107,6 @@ class ser_reader:
     def has_frames(self):
         return self.FrameIndex+1 < self.FrameCount
 
-# read video and return constructed image of sun using fit and LineRecal
-def read_video_improved(serfile, fit, LineRecal, options):
-    rdr = ser_reader(serfile, options)
-    ih, iw = rdr.ih, rdr.iw
-    
-    if options['flag_display']:
-        cv2.namedWindow('disk', cv2.WINDOW_NORMAL)
-        FrameMax=rdr.FrameCount
-        cv2.resizeWindow('disk', FrameMax//3, ih//3)
-        cv2.moveWindow('disk', 200, 0)
-        #initialize le tableau qui va recevoir la raie spectrale de chaque trame
-        Disk=np.zeros((ih,FrameMax), dtype=rdr.infiledatatype) #MattC should use out?
-        
-        cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-        cv2.moveWindow('image', 0, 0)
-        cv2.resizeWindow('image', int(iw), int(ih))
-    else:
-        #Disk=np.zeros((ih,1), dtype=options['outfiledatatype'])
-        FrameMax=rdr.FrameCount
-        Disk=np.zeros((ih,FrameMax), dtype=rdr.infiledatatype) #MattC should use out?
-        
-    shift = options['shift']
-    ind_l = (np.asarray(fit)[:, 0] + np.ones(ih) * (LineRecal + shift)).astype(int)
-    
-    #CLEAN if fitting goes too far
-    ind_l[ind_l < 0] = 0
-    ind_l[ind_l > iw - 2] = iw - 2
-    ind_r = (ind_l + np.ones(ih)).astype(int)
-    left_weights = np.ones(ih) - np.asarray(fit)[:, 1]
-    right_weights = np.ones(ih) - left_weights
-
-    # lance la reconstruction du disk a partir des trames
-    print('reader num frames:', rdr.FrameCount)
-    while rdr.has_frames():
-        img = rdr.next_frame()               
-        if options['flag_display'] and rdr.FrameIndex % 10 == 0 :
-            cv2.imshow('image', img)
-            if cv2.waitKey(1)==27:
-                cv2.destroyAllWindows()
-                sys.exit()
-
-        left_col = img[np.arange(ih), ind_l]
-        right_col = img[np.arange(ih), ind_r]
-        IntensiteRaie = left_col*left_weights + right_col*right_weights
-        
-        #ajoute au tableau disk 
-        Disk[:,rdr.FrameIndex]=IntensiteRaie.astype(rdr.infiledatatype)
-        
-        if options['flag_display'] and rdr.FrameIndex % 10 ==0:
-            cv2.imshow ('disk', Disk)
-            if cv2.waitKey(1) == 27:                     # exit if Escape is hit
-                cv2.destroyAllWindows()    
-                sys.exit()
-    return Disk, ih, iw, rdr.FrameCount, rdr.infiledatatype, rdr.scalemax #MattC
 
 
-# compute mean image of video
-def compute_mean(serfile, options):
-    rdr = ser_reader(serfile,options)
-    logme('Width, Height : '+str(rdr.Width)+' '+str(rdr.Height)) 
-    logme('Number of frames : '+str(rdr.FrameCount))
-    my_data = np.zeros((rdr.ih, rdr.iw),dtype='uint64')
-    while rdr.has_frames():
-        img = rdr.next_frame()
-        my_data += img
-    return (my_data / rdr.FrameCount).astype(rdr.infiledatatype), rdr #MattC should use var
+
