@@ -89,6 +89,7 @@ def UI_SerBrowse (WorkDir):
     [sg.Text('Y/X ratio (blank for auto)', size=(20,1)), sg.Input(default_text='', size=(8,1),key='-RATIO-')],
     [sg.Text('Tilt angle (blank for auto)',size=(20,1)),sg.Input(default_text='',size=(8,1),key='-SLANT-',enable_events=True)],
     [sg.Text('Pixel offset',size=(20,1)),sg.Input(default_text='0',size=(8,1),key='-DX-',enable_events=True)],
+    [sg.Text('Pixel margin',size=(20,1)),sg.Input(default_text='1',size=(8,1),key='-PM-',enable_events=True)], #MattC
     [sg.Button('OK'), sg.Cancel()]
     ] 
     
@@ -109,7 +110,7 @@ def UI_SerBrowse (WorkDir):
     FileNames=values['-FILE-']
     
     
-    return FileNames, values['-DX-'], values['-DISP-'], None if values['-RATIO-']=='' else values['-RATIO-'] , None if values['-SLANT-']=='' else values['-SLANT-'], values['-FIT-'], values['-CLAHE_ONLY-']
+    return FileNames, values['-DX-'], values['-DISP-'], None if values['-RATIO-']=='' else values['-RATIO-'] , None if values['-SLANT-']=='' else values['-SLANT-'], values['-FIT-'], values['-CLAHE_ONLY-'], values['-PM-'] #MattC
 
 """
 -------------------------------------------------------------------------------------------
@@ -126,7 +127,8 @@ options = {
 'slant_fix' : None ,
 'save_fit' : True,
 'clahe_only' : False,
-'disk_display' : True #protus
+'disk_display' : True, #protus
+'pixel_margin' : 0 #MattC
 }
 
 flag_dictionnary = {
@@ -145,8 +147,8 @@ if len(sys.argv)>1 :
         else : #it's a file or some files
             if argument.split('.')[-1].upper()=='SER' or argument.split('.')[-1].upper()=='AVI': #MattC
                 serfiles.append(argument)
-    print('theses files are going to be processed : ', serfiles)
-#print('Processing will begin with values : \n shift %s, flag_display %s, "%s", slant_fix "%s", save_fit %s, clahe_only %s, disk_display %s' %(options['shift'], options['flag_display'], options['ratio_fixe'], options['slant_fix'], options['save_fit'], options['clahe_only'], options['disk_display']) )
+    print('these files are going to be processed : ', serfiles) #MattC
+#print('Processing will begin with values : \n shift %s, flag_display %s, "%s", slant_fix "%s", save_fit %s, clahe_only %s, disk_display %s, pixel_margin %s' %(options['shift'], options['flag_display'], options['ratio_fixe'], options['slant_fix'], options['save_fit'], options['clahe_only'], options['disk_display'], options['pixel_margin']) ) #MattC
 
 # check for .ini file for working directory           
 try:
@@ -159,13 +161,17 @@ except:
     
 # if no command line arguments, open GUI interface
 if len(serfiles)==0 : 
-    serfiles, shift, flag_display, ratio_fixe, slant_fix, save_fit, clahe_only =UI_SerBrowse(WorkDir) #TODO as options is defined as global, only serfiles could be returned
+    serfiles, shift, flag_display, ratio_fixe, slant_fix, save_fit, clahe_only, pixel_margin =UI_SerBrowse(WorkDir) #TODO as options is defined as global, only serfiles could be returned #MattC
     try : 
         options['shift'] = int(shift)
     except ValueError : 
         print('invalid shift value')
         sys.exit()
-        
+    try : #MattC
+        options['pixel_margin'] = int(pixel_margin)
+    except ValueError : 
+        print('invalid pixel_margin value')
+        sys.exit()
     options['flag_display'] = flag_display
     try : 
         options['ratio_fixe'] = float(ratio_fixe) if not ratio_fixe is None else None
@@ -239,7 +245,7 @@ def do_work():
             # clahe = cv2.createCLAHE(clipLimit=0.8, tileGridSize=(5,5))
             clahe = cv2.createCLAHE(clipLimit=0.8, tileGridSize=(2,2))
             cl1 = clahe.apply(frame)
-            
+                       
             # image leger seuils
             frame1=np.copy(frame)
             Seuil_bas=np.percentile(frame, 25)
@@ -284,6 +290,10 @@ def do_work():
             cc[cc<0]=0
             cc=np.array(cc, dtype='uint16')
 
+            frame1=np.copy(frame)
+            frame_circ_noadj=np.array(frame1, dtype='uint16')*255 #MattC
+            cv2.imwrite(basefich+'_'+str(options['pixel_margin'])+'_circunadj.png',frame_circ_noadj) #MattC
+            
             # sauvegarde en png de clahe
             cv2.imwrite(basefich+'_clahe.png',cc)   # Modification Jean-Francois: placed before the IF for clear reading
             if not options['clahe_only']:
@@ -293,6 +303,7 @@ def do_work():
                 cv2.imwrite(basefich+'_diskHC.png',frame_contrasted2)
                 # sauvegarde en png pour appliquer une colormap par autre script
                 cv2.imwrite(basefich+'_protus.png',frame_contrasted3)
+                
             
             # Modification Jean-Francois: the 4 images are concatenated together in 1 image => 'Sun images'
             # The 'Sun images' is scaled for the monitor maximal dimension ... it is scaled to match the dimension of the monitor without 
@@ -309,7 +320,7 @@ def do_work():
                 cv2.moveWindow('Sun images', 0, 0)
                 cv2.resizeWindow('Sun images',int(im_3.shape[1] * scale), int(im_3.shape[0] * scale))
                 cv2.imshow('Sun images',im_3)
-                cv2.waitKey(options['tempo'])  # affiche et continue
+                cv2.waitKey(4000)  # affiche et continue #MattC
                 cv2.destroyAllWindows()
             
             """

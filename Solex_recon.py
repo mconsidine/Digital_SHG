@@ -16,7 +16,7 @@ calcul sur une image des ecarts simples entre min de la raie et une ligne de ref
 from solex_util import *
 from ser_read_video import *
 from ellipse_to_circle import ellipse_to_circle, correct_image
-
+import numpy_indexed as npi
 
 # read video and return constructed image of sun using fit and LineRecal
 def read_video_improved(serfile, fit, LineRecal, options):
@@ -40,28 +40,67 @@ def read_video_improved(serfile, fit, LineRecal, options):
         Disk=np.zeros((ih,FrameMax), dtype=rdr.infiledatatype) #MattC
         
     shift = options['shift']
-    ind_l = (np.asarray(fit)[:, 0] + np.ones(ih) * (LineRecal + shift)).astype(int)
-    
+    ind_l = (np.asarray(fit)[:, 0] + np.ones(ih) * (LineRecal + shift )).astype(int) #MattC
+
     #CLEAN if fitting goes too far
     ind_l[ind_l < 0] = 0
     ind_l[ind_l > iw - 2] = iw - 2
+    #print('ind l ',ind_l) #MattC
+    #print('ind l shape ',ind_l.shape)    #MattC
     ind_r = (ind_l + np.ones(ih)).astype(int)
+    #print('ind r ',ind_r) #MattC
+    #print('ind r shape ',ind_r.shape) #MattC
     left_weights = np.ones(ih) - np.asarray(fit)[:, 1]
     right_weights = np.ones(ih) - left_weights
-
     # lance la reconstruction du disk a partir des trames
-    print('reader num frames:', rdr.FrameCount)
+    #print('L Weights : ', left_weights.shape) #MattC
+    #print('R Weights : ', right_weights.shape) #MattC
+    #print('reader num frames:', rdr.FrameCount) #MattC
+    ##an_array = np.arange(0,iw)
+    ##repetitions = ih
+    ##testmask = np.tile(an_array, (repetitions))#.reshape(ih,iw)
+    ##print('testmask shape',testmask.shape)
+    ##col_mask=np.tile(range(0,options['pixel_margin']),ih).reshape(ih,options['pixel_margin'])  
+    col_mask = np.repeat(range(0,options['pixel_margin']),ih) #MattC
+    #print('col mask shape',col_mask.shape) MattC
+ 
     while rdr.has_frames():
         img = rdr.next_frame()               
+        img2 = img.reshape(ih*iw)
         if options['flag_display'] and rdr.FrameIndex % 10 == 0 :
             cv2.imshow('image', img)
             if cv2.waitKey(1)==27:
                 cv2.destroyAllWindows()
                 sys.exit()
 
-        left_col = img[np.arange(ih), ind_l]
-        right_col = img[np.arange(ih), ind_r]
-        IntensiteRaie = left_col*left_weights + right_col*right_weights
+        if options['pixel_margin'] >= 0: #MattC
+
+            left_banda = np.repeat(ind_l, options['pixel_margin'])
+            left_band = left_banda - col_mask
+            #if rdr.FrameIndex % 1000 == 0: #MattC
+                #print('img shape ',img.shape)    #MattC        
+                #print('left band shape ',left_band.shape)  #MattC
+            mx1 = np.take_along_axis(img,left_band.reshape(ih,options['pixel_margin']),1)
+            left_col = np.mean(mx1,axis=1) 
+
+            right_banda = np.repeat(ind_r, options['pixel_margin'])
+            right_band = right_banda + col_mask
+            mx2 = np.take_along_axis(img,right_band.reshape(ih,options['pixel_margin']),1)
+            right_col = np.mean(mx2,axis=1)              
+            #if rdr.FrameIndex % 1000 == 0: #MattC
+                #print('mx1 shape ',mx1.shape)            
+                #print('mx2 shape ',mx2.shape)    
+                #print('mx1 type ',type(mx1))
+                #print('mx2 type ',type(mx2))    
+            mx3 = np.hstack((mx1,mx2))
+            #if rdr.FrameIndex % 1000 == 0: #MattC
+                #print('mx3 shape ',mx3.shape)
+            IntensiteRaie = np.mean(mx3, axis=1) #MattC could be any function, techically
+        #else:
+        #    left_col = img[np.arange(ih), ind_l]
+        #    right_col = img[np.arange(ih), ind_r]
+
+        #    IntensiteRaie = left_col*left_weights + right_col*right_weights
         
         #ajoute au tableau disk 
         Disk[:,rdr.FrameIndex]=IntensiteRaie.astype(rdr.infiledatatype) #MattC
@@ -105,7 +144,7 @@ def compute_mean(serfile):
 
 def compute_mean_return_fit(serfile, options, LineRecal = 1): 
     global hdr, ih, iw
-
+    
     """
     ----------------------------------------------------------------------------
     Reconstuit l'image du disque a partir de l'image moyenne des trames et 
@@ -120,7 +159,7 @@ def compute_mean_return_fit(serfile, options, LineRecal = 1):
     # first compute mean image
     # rdr is the ser_reader object
     mean_img= compute_mean(serfile)
-
+    
     """
     ----------------------------------------------------------------------------
     Calcul polynome ecart sur une image au centre de la sequence
@@ -160,7 +199,7 @@ def compute_mean_return_fit(serfile, options, LineRecal = 1):
     """
     # construit le tableau des min de la raie a partir du haut jusqu'en bas
     MinOfRaie=[]
-    
+
     for i in range(PosRaieHaut,PosRaieBas):
         line_h=mean_img[i,:]
         MinX=line_h.argmin()
