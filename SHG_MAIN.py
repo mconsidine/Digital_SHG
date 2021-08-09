@@ -291,7 +291,7 @@ def do_work():
             cc=np.array(cc, dtype='uint16')
 
             frame_circ_noadj=np.copy(frame) #MattC
-            cv2.imwrite(basefich+'_bw'+str(options['pixel_bandwidth'])+'_circunadj.png',frame_circ_noadj) #MattC
+            cv2.imwrite(basefich+'_hbw'+str(options['pixel_bandwidth'])+'_circunadj.png',frame_circ_noadj) #MattC
             
             # sauvegarde en png de clahe
             cv2.imwrite(basefich+'_clahe.png',cc)   # Modification Jean-Francois: placed before the IF for clear reading
