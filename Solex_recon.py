@@ -45,10 +45,10 @@ def read_video_improved(serfile, fit, LineRecal, options):
     #CLEAN if fitting goes too far
     ind_l[ind_l < 0] = 0
     ind_l[ind_l > iw - 2] = iw - 2
-    #print('ind l ',ind_l) #MattC
+    #print('ind l ',ind_l[0:49]) #MattC
     #print('ind l shape ',ind_l.shape)    #MattC
     ind_r = (ind_l + np.ones(ih)).astype(int)
-    #print('ind r ',ind_r) #MattC
+    #print('ind r ',ind_r[0:49]) #MattC
     #print('ind r shape ',ind_r.shape) #MattC
     left_weights = np.ones(ih) - np.asarray(fit)[:, 1]
     right_weights = np.ones(ih) - left_weights
@@ -60,42 +60,58 @@ def read_video_improved(serfile, fit, LineRecal, options):
     ##repetitions = ih
     ##testmask = np.tile(an_array, (repetitions))#.reshape(ih,iw)
     ##print('testmask shape',testmask.shape)
-    ##col_mask=np.tile(range(0,options['pixel_margin']),ih).reshape(ih,options['pixel_margin'])  
-    col_mask = np.repeat(range(0,options['pixel_margin']),ih) #MattC
-    #print('col mask shape',col_mask.shape) MattC
+    col_mask = np.tile(range(0,options['pixel_bandwidth']),ih).reshape(ih,options['pixel_bandwidth'])  #MattC
+    #print('col mask shape',col_mask.shape) #MattC
+    #print('col mask data ',col_mask[0:49,:])
  
     while rdr.has_frames():
         img = rdr.next_frame()               
-        img2 = img.reshape(ih*iw)
+        #img2 = img.reshape(ih*iw)
         if options['flag_display'] and rdr.FrameIndex % 10 == 0 :
             cv2.imshow('image', img)
             if cv2.waitKey(1)==27:
                 cv2.destroyAllWindows()
                 sys.exit()
 
-        if options['pixel_margin'] >= 0: #MattC
-
-            left_banda = np.repeat(ind_l, options['pixel_margin'])
+        if options['pixel_bandwidth'] >= 0: #MattC TODO: need to test this against prior default
+            left_banda = np.repeat(ind_l, options['pixel_bandwidth'],axis=0).reshape(ih,options['pixel_bandwidth'])
             left_band = left_banda - col_mask
-            #if rdr.FrameIndex % 1000 == 0: #MattC
-                #print('img shape ',img.shape)    #MattC        
-                #print('left band shape ',left_band.shape)  #MattC
-            mx1 = np.take_along_axis(img,left_band.reshape(ih,options['pixel_margin']),1)
+            mx1 = np.take_along_axis(img,left_band.reshape(ih,options['pixel_bandwidth']),1)
             left_col = np.mean(mx1,axis=1) 
 
-            right_banda = np.repeat(ind_r, options['pixel_margin'])
+            right_banda = np.repeat(ind_r, options['pixel_bandwidth'],axis=0).reshape(ih,options['pixel_bandwidth'])
             right_band = right_banda + col_mask
-            mx2 = np.take_along_axis(img,right_band.reshape(ih,options['pixel_margin']),1)
+            mx2 = np.take_along_axis(img,right_band.reshape(ih,options['pixel_bandwidth']),1)
             right_col = np.mean(mx2,axis=1)              
-            #if rdr.FrameIndex % 1000 == 0: #MattC
+            '''
+            if rdr.FrameIndex == 2000: #MattC
+                print('FRAMEINDEX ',rdr.FrameIndex)
                 #print('mx1 shape ',mx1.shape)            
                 #print('mx2 shape ',mx2.shape)    
                 #print('mx1 type ',type(mx1))
-                #print('mx2 type ',type(mx2))    
+                #print('mx2 type ',type(mx2)) 
+                print('img data ',img[0:49,:])
+                print('left banda data ',left_banda[0:49,:])
+                print('left band data ',left_band[0:49,:])
+                print('mx1 data ',mx1[0:49,:])          
+                print('left col data ',left_col[0:49])
+                print('right banda data ',right_banda[0:49,:])
+                print('right band data ',right_band[0:49,:])                 
+                print('mx2 data ',mx2[0:49,:])
+                print('right col data ',right_col[0:49])                        
+            '''
             mx3 = np.hstack((mx1,mx2))
-            #if rdr.FrameIndex % 1000 == 0: #MattC
-                #print('mx3 shape ',mx3.shape)
+            '''
+            if rdr.FrameIndex == 2000: #MattC
+                print('mx3 shape ',mx3.shape)
+                print('mx3 data ',mx3[0:49,:])                 
+             '''
             IntensiteRaie = np.mean(mx3, axis=1) #MattC could be any function, techically
+            '''
+            if rdr.FrameIndex == 2000: #MattC
+                print('Intens shape ',IntensiteRaie.shape)
+                print('Intens data ',IntensiteRaie[0:49].astype(rdr.infiledatatype))
+            '''
         #else:
         #    left_col = img[np.arange(ih), ind_l]
         #    right_col = img[np.arange(ih), ind_r]
@@ -110,6 +126,8 @@ def read_video_improved(serfile, fit, LineRecal, options):
             if cv2.waitKey(1) == 27:                     # exit if Escape is hit
                 cv2.destroyAllWindows()    
                 sys.exit()
+    if rdr.infiledatatype == 'uint8': #MattC deal with AVI scale
+        Disk = (Disk*(65535/255))
     return Disk, ih, iw, rdr.FrameCount
 
 

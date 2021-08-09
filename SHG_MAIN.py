@@ -89,7 +89,7 @@ def UI_SerBrowse (WorkDir):
     [sg.Text('Y/X ratio (blank for auto)', size=(20,1)), sg.Input(default_text='', size=(8,1),key='-RATIO-')],
     [sg.Text('Tilt angle (blank for auto)',size=(20,1)),sg.Input(default_text='',size=(8,1),key='-SLANT-',enable_events=True)],
     [sg.Text('Pixel offset',size=(20,1)),sg.Input(default_text='0',size=(8,1),key='-DX-',enable_events=True)],
-    [sg.Text('Pixel margin',size=(20,1)),sg.Input(default_text='1',size=(8,1),key='-PM-',enable_events=True)], #MattC
+    [sg.Text('Pixel margin (half desire bandwidth',size=(20,1)),sg.Input(default_text='1',size=(8,1),key='-PM-',enable_events=True)], #MattC
     [sg.Button('OK'), sg.Cancel()]
     ] 
     
@@ -128,7 +128,7 @@ options = {
 'save_fit' : True,
 'clahe_only' : False,
 'disk_display' : True, #protus
-'pixel_margin' : 0 #MattC
+'pixel_bandwidth' : 0 #MattC
 }
 
 flag_dictionnary = {
@@ -148,7 +148,7 @@ if len(sys.argv)>1 :
             if argument.split('.')[-1].upper()=='SER' or argument.split('.')[-1].upper()=='AVI': #MattC
                 serfiles.append(argument)
     print('these files are going to be processed : ', serfiles) #MattC
-#print('Processing will begin with values : \n shift %s, flag_display %s, "%s", slant_fix "%s", save_fit %s, clahe_only %s, disk_display %s, pixel_margin %s' %(options['shift'], options['flag_display'], options['ratio_fixe'], options['slant_fix'], options['save_fit'], options['clahe_only'], options['disk_display'], options['pixel_margin']) ) #MattC
+#print('Processing will begin with values : \n shift %s, flag_display %s, "%s", slant_fix "%s", save_fit %s, clahe_only %s, disk_display %s, pixel_bandwidth %s' %(options['shift'], options['flag_display'], options['ratio_fixe'], options['slant_fix'], options['save_fit'], options['clahe_only'], options['disk_display'], options['pixel_bandwidth']) ) #MattC
 
 # check for .ini file for working directory           
 try:
@@ -161,16 +161,16 @@ except:
     
 # if no command line arguments, open GUI interface
 if len(serfiles)==0 : 
-    serfiles, shift, flag_display, ratio_fixe, slant_fix, save_fit, clahe_only, pixel_margin =UI_SerBrowse(WorkDir) #TODO as options is defined as global, only serfiles could be returned #MattC
+    serfiles, shift, flag_display, ratio_fixe, slant_fix, save_fit, clahe_only, pixel_bandwidth =UI_SerBrowse(WorkDir) #TODO as options is defined as global, only serfiles could be returned #MattC
     try : 
         options['shift'] = int(shift)
     except ValueError : 
         print('invalid shift value')
         sys.exit()
     try : #MattC
-        options['pixel_margin'] = int(pixel_margin)
+        options['pixel_bandwidth'] = int(pixel_bandwidth)
     except ValueError : 
-        print('invalid pixel_margin value')
+        print('invalid pixel_bandwidth value')
         sys.exit()
     options['flag_display'] = flag_display
     try : 
@@ -290,9 +290,8 @@ def do_work():
             cc[cc<0]=0
             cc=np.array(cc, dtype='uint16')
 
-            frame1=np.copy(frame)
-            frame_circ_noadj=np.array(frame1, dtype='uint16')*255 #MattC
-            cv2.imwrite(basefich+'_'+str(options['pixel_margin'])+'_circunadj.png',frame_circ_noadj) #MattC
+            frame_circ_noadj=np.copy(frame) #MattC
+            cv2.imwrite(basefich+'_bw'+str(options['pixel_bandwidth'])+'_circunadj.png',frame_circ_noadj) #MattC
             
             # sauvegarde en png de clahe
             cv2.imwrite(basefich+'_clahe.png',cc)   # Modification Jean-Francois: placed before the IF for clear reading

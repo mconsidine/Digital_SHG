@@ -70,7 +70,7 @@ class ser_reader:
             self.PixelDepthPerPlane=1*8
             self.FrameCount = int(self.serfile.get(cv2.CAP_PROP_FRAME_COUNT))            
             self.count=self.Width*self.Height
-            self.FrameIndex=-1
+            self.FrameIndex=0 #MattC cv2 starts indexing at 1?
             self.offset = 0
             self.fileoffset = 0 #MattC to avoid stomping on offset accumulator
         else : #MattC
