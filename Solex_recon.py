@@ -16,7 +16,7 @@ calcul sur une image des ecarts simples entre min de la raie et une ligne de ref
 from solex_util import *
 from ser_read_video import *
 from ellipse_to_circle import ellipse_to_circle, correct_image
-import numpy_indexed as npi
+#import numpy_indexed as npi
 
 # read video and return constructed image of sun using fit and LineRecal
 def read_video_improved(serfile, fit, LineRecal, options):
