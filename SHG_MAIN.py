@@ -128,7 +128,7 @@ options = {
 'save_fit' : True,
 'clahe_only' : False,
 'disk_display' : True, #protus
-'pixel_bandwidth' : 0 #MattC
+'pixel_bandwidth' : 1 #MattC
 }
 
 flag_dictionnary = {
