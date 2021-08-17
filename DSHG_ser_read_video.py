@@ -53,7 +53,25 @@ class ser_reader:
         
             FrameCount=np.fromfile(serfile, dtype='uint32', count=1,offset=offset)
             self.FrameCount=FrameCount[0]
-        
+            #mattc ...
+            b=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
+            Observer=b.tobytes().decode()
+            offset=offset+40
+
+            b=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
+            Instrument=b.tobytes().decode()
+            offset=offset+40
+   
+            b=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
+            Telescope=b.tobytes().decode()
+            offset=offset+40
+   
+            DTime=np.fromfile(serfile, dtype='int64', count=1,offset=offset)
+            self.DTime=DTime[0]
+            offset=offset+8
+            DTimeUTC=np.fromfile(serfile, dtype='int64', count=1,offset=offset)
+            self.DTimeUTC=DTimeUTC[0]
+            #...mattc
             if self.PixelDepthPerPlane==8:
                 self.infiledatatype='uint8'
                 self.count=self.Width*self.Height       # Nombre d'octet d'une trame

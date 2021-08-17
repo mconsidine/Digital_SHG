@@ -284,14 +284,15 @@ def ellipse_to_circle(image, options):
     
     #fix_img, center = correct_image(image, phi, ratio, center, print_log = True)               # original
     fix_img, center = correct_image(image, shear_angle, ratio_corr, center, print_log = True)   # Modification Jean-Francois
-    #fix_img = np.fliplr(fix_img) #MattC  kludge
-    #fix_img = ndimage.rotate(fix_img, np.degrees(phi)-180, reshape=False) #MattC kludge
+    #fix_img = np.fliplr(np.copy(fix_img)) #MattC  kludge
+    #print('Shear angle : ', shear_angle,np.degrees(shear_angle))
+    #fix_img = ndimage.rotate(fix_img, np.degrees(shear_angle), reshape=False) #MattC kludge
     
     if options['flag_display']:
         fig, ax = plt.subplots(ncols=2, nrows = 2)
-        ax[0][0].imshow(image, cmap=plt.cm.gray)
+        ax[0][0].imshow(image, cmap=plt.cm.gray) #MattC fix_img?
         ax[0][0].set_title('uncorrected image', fontsize = 11)
-        ax[0][1].imshow(image, cmap=plt.cm.gray)
+        ax[0][1].imshow(image, cmap=plt.cm.gray) #MattC fix_img?
         ax[0][1].plot(raw_X[:, 1], raw_X[:, 0], 'ro', label = 'edge detection')
         #ax[0][1].set_xlim([0, image.shape[1]])     # Modification Jean-Francois, for having the image same orientation as ax[0][0]
         #ax[0][1].set_ylim([0, image.shape[0]])     # Modification Jean-Francois, for having the image same orientation as ax[0][0]
@@ -300,9 +301,9 @@ def ellipse_to_circle(image, options):
         ax[1][1].plot(X_f[:, 1], X_f[:, 0], 'ro', label = 'filtered edges')
         #ax[1][1].plot(ellipse_points[:, 1], image.shape[0] - ellipse_points[:, 0], color='b', label = 'ellipse fit')   # Modification Jean-Francois
         ax[1][1].plot(ellipse_points[:, 1], ellipse_points[:, 0], color='b', label = 'ellipse fit')
-        ax[1][1].set_xlim([0, image.shape[1]])
+        ax[1][1].set_xlim([0, image.shape[1]]) #MattC fix_img?
         #ax[1][1].set_ylim([0, image.shape[0]])     # Modification Jean-Francois
-        ax[1][1].set_ylim([image.shape[0], 0])      # Modification Jean-Francois, for having the scale pointing "down"
+        ax[1][1].set_ylim([image.shape[0], 0])      # Modification Jean-Francois, for having the scale pointing "down" #MattC fix_img?
         ax[1][1].legend()
         ax[1][0].imshow(fix_img, cmap=plt.cm.gray)
         ax[1][0].set_title('geometrically corrected image', fontsize=11)

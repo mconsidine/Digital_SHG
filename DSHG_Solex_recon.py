@@ -17,6 +17,9 @@ from DSHG_solex_util import *
 from DSHG_ser_read_video import *
 from DSHG_ellipse_to_circle_JFP import ellipse_to_circle, correct_image
 #import numpy_indexed as npi #MattC
+import astropy.units as u
+from astropy.time import Time
+from astropy.coordinates import SkyCoord, EarthLocation, get_sun, AltAz
 
 # read video and return constructed image of sun using fit and LineRecal
 '''
@@ -522,8 +525,94 @@ def solex_proc(serfile, options):
    
     #sauve fichier disque reconstruit
 
-
+    '''
+    Start of angle/shear test ... MattC
+    '''
+    '''
+    print(rdr.DTime)
+    print(rdr.DTimeUTC)
     
+    the_location = EarthLocation.from_geodetic(lat=45.2*u.deg, lon=-70*u.deg, height=330*u.m)
+    utcoffset = -4*u.hour
+    
+    startobstime = Time('2021-07-22 10:58:23') - utcoffset
+    timeframe = AltAz(obstime=startobstime, location=the_location)
+    startsunaltaz = get_sun(startobstime).transform_to(timeframe)
+    print("Sun's altitude = {0.alt:.8}".format(startsunaltaz))
+    print("Sun's alzimuth = {0.az:.8}".format(startsunaltaz))
+
+    endobstime = startobstime + 2*u.min
+    timeframe = AltAz(obstime=endobstime, location=the_location)
+    endsunaltaz = get_sun(endobstime).transform_to(timeframe)
+    print("Sun's altitude = {0.alt:.8}".format(endsunaltaz))
+    print("Sun's azimuth = {0.az:.8}".format(endsunaltaz))
+
+    print(endsunaltaz.alt-startsunaltaz.alt)
+    print(endsunaltaz.az-startsunaltaz.az)
+    the_slope = ((endsunaltaz.alt-startsunaltaz.alt)/(endsunaltaz.az-startsunaltaz.az))/2
+    
+    slope_rad=math.atan(the_slope)
+    slope_deg=math.degrees(slope_rad)
+    print(the_slope)
+    print(slope_deg)
+
+    print("strip width in pixels : ",disk_list[0].shape[1])
+    print("strip height in pixels : ",disk_list[0].shape[0])
+    
+    plt.imshow(disk_list[0])
+    plt.show()        
+
+    rows, cols = disk_list[0].shape    
+    angle_shs = 2*slope_deg #rotation about center; undo shear then add angle
+    shearx_shs = 0*the_slope #positive leans to left; anchors on bottom
+    sheary_shs = the_slope #positive skews down from left; anchors on left
+    transl_shs = 0
+    type_border = cv2.BORDER_CONSTANT
+    color_border = (255,255,255)
+    
+    ###Calc space needed for rotation
+    ##M=cv2.getRotationMatrix2D((cols/2,rows/2), 45, 1) #45 would be max
+    ##cos_part = np.abs(M[0,0])
+    ##sin_part = np.abs(M[0,1])
+    ##new_cols = int((rows * sin_part) + (cols * cos_part))
+    ##new_rows = int((rows * cos_part) + (cols * sin_part))
+    ###Calc space needed for shear
+    ##new_cols = new_cols + (shearx_shs*new_cols)
+    ##new_rows = new_rows + (sheary_shs*new_rows)
+    
+    new_rows = max(rows,cols)
+    new_cols = max(rows,cols)+2*rows
+    #Calc space needed for border
+    up_down = int((new_rows-rows)/2)
+    left_right = int((new_cols-cols)/2)
+
+    sheared_Disk = cv2.copyMakeBorder(disk_list[0], up_down, up_down, left_right, left_right, type_border, value=color_border)
+    
+    plt.axis('off')
+    plt.imshow(sheared_Disk)
+    plt.show()
+    
+    rows, cols = sheared_Disk.shape
+    #Apply transform
+    M_rot = cv2.getRotationMatrix2D((cols/2, rows/2),angle_shs,1)
+   
+    translat_center_x = 0
+    translat_center_y = 0
+    translat_center_x = -(shearx_shs*cols)/2
+    translat_center_y = -(sheary_shs*rows)/2
+    
+    M = M_rot + np.float64([[0,shearx_shs,transl_shs + translat_center_x], [sheary_shs,0,transl_shs + translat_center_y]])
+
+    sheared_Disk = cv2.warpAffine(sheared_Disk, M, (cols,rows), borderMode=type_border, borderValue=color_border)
+    
+    sheared_Disk = cv2.flip(sheared_Disk, 1)
+    
+    plt.axis('off')
+    plt.imshow(sheared_Disk)
+    plt.show()
+    #options['slant_fix']=slope_deg
+    # ... end of angle test MattC   
+    '''
     
     if options['flag_display']:
         cv2.destroyAllWindows()

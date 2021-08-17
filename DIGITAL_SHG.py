@@ -37,6 +37,8 @@ import tkinter as tk
 import ctypes # Modification Jean-Francois: for reading the monitor size
 import cv2
 import traceback
+import imageio
+from PIL import Image, ImageFont, ImageDraw
 
 def usage():
     usage_ = "DIGITAL_SHG.py [-dcfpw] [file(s) to treat]\n"
@@ -275,6 +277,9 @@ def do_work():
         #
         # basefich: nom du fichier ser sans extension et sans repertoire
         # dx: decalage en pixel par rapport au centre de la raie
+        
+        if len(options['shift']) > 1:
+            gifimagelist = [] #MattC to create gif
 
         try : 
             frames, header, cercle=sol.solex_proc(serfile,options.copy())       
@@ -333,9 +338,11 @@ def do_work():
                 if not cercle == (-1, -1, -1) and disk_display==True:
                     x0=int(cercle[0])
                     y0=int(cercle[1])
-                    r=int(cercle[2]) - 6 #MattC larger margin
+                    r=int(cercle[2]) - 4 #MattC larger margin
                     frame1=cv2.circle(frame1, (x0,y0),r,0,-1) #MattC zero out the disk
                 #MattC now do the scaling ...
+                clahe = cv2.createCLAHE(clipLimit=0.6, tileGridSize=(2,2)) #MattC .8
+                frame1 = clahe.apply(frame1)
                 Seuil_bas=0
                 Seuil_haut=np.percentile(frame1,99.9999) #MattC     
                 print('Seuil bas protu :', np.floor(Seuil_bas))
@@ -351,6 +358,9 @@ def do_work():
                 cc[cc<0]=0
                 cc[cc>65535] = 65535
                 cc=np.array(cc, dtype='uint16')
+
+                if len(options['shift']) > 1:
+                    gifimagelist.append(cv2.resize(((cc/65535)*255).astype(np.uint8), dsize=(cc.shape[1]//3, cc.shape[0]//3), interpolation=cv2.INTER_CUBIC)) #MattC to create gif
 
                 # sauvegarde en png de clahe
                 cv2.imwrite(basefich+'_clahe.png',cc)   # Modification Jean-Francois: placed before the IF for clear reading
@@ -386,6 +396,8 @@ def do_work():
                 if options['save_fit']:
                     DiskHDU=fits.PrimaryHDU(frame2,header)
                     DiskHDU.writeto(basefich+ '_clahe.fits', overwrite='True')
+            if len(options['shift']) > 1:
+                imageio.mimsave(basefich+'_clahe.gif', gifimagelist, fps=1) #MattC to create gif
         except :
             print('ERROR ENCOUNTERED')
             traceback.print_exc()
@@ -396,3 +408,4 @@ if 0:
     cProfile.run('do_work()', sort='cumtime')
 else:
     do_work()
+
