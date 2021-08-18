@@ -122,7 +122,7 @@ def UI_SerBrowse (WorkDir):
     
     tab2_layout =[[sg.Text('Pixel margin (half desire bandwidth',size=(30,1)),sg.Input(default_text='1',size=(8,1),key='-PM-',enable_events=True)],
                   [sg.Checkbox('Adj for turb? NotWorking', size=(30,1),default=False, key='-LINEADJ-')],    
-                  #[sg.Checkbox('Alt ellipse code?', size=(30,1),default=False, key='-HFLIP-')],
+                  [sg.Checkbox('Test code?', size=(30,1),default=False, key='-HFLIP-')],
                   ]
     
     tab_group_layout =[[sg.Tab('General', tab1_layout, key='-TAB1-'),
@@ -416,7 +416,7 @@ def do_work():
                     DiskHDU=fits.PrimaryHDU(frame2,header)
                     DiskHDU.writeto(basefich+ '_clahe.fits', overwrite='True')
             if len(options['shift']) > 1:
-                imageio.mimsave(basefich+'_clahe.gif', gifimagelist, fps=1) #MattC to create gif
+                imageio.mimsave(basefich+'_clahe.gif', gifimagelist, fps=3) #MattC to create gif
         except :
             print('ERROR ENCOUNTERED')
             traceback.print_exc()
