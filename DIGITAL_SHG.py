@@ -122,7 +122,8 @@ def UI_SerBrowse (WorkDir):
     
     tab2_layout =[[sg.Text('Pixel margin (half desire bandwidth',size=(30,1)),sg.Input(default_text='1',size=(8,1),key='-PM-',enable_events=True)],
                   [sg.Checkbox('Adj for turb? NotWorking', size=(30,1),default=False, key='-LINEADJ-')],    
-                  [sg.Checkbox('Alt ellipse code?', size=(30,1),default=False, key='-HFLIP-')]]
+                  #[sg.Checkbox('Alt ellipse code?', size=(30,1),default=False, key='-HFLIP-')],
+                  ]
     
     tab_group_layout =[[sg.Tab('General', tab1_layout, key='-TAB1-'),
                         sg.Tab('Experimental', tab2_layout, title_color='red', key='-TAB2-'),
@@ -162,7 +163,7 @@ def UI_SerBrowse (WorkDir):
     FileNames=values['-FILE-']
     
     
-    return FileNames, values['-DX-'], values['-DISP-'], None if values['-RATIO-']=='' else values['-RATIO-'] , None if values['-SLANT-']=='' else values['-SLANT-'], values['-FIT-'], values['-CLAHE_ONLY-'], values['-PM-'] #, values['-LINEADJ-'] , values['-HFLIP-'] #MattC
+    return FileNames, values['-DX-'], values['-DISP-'], None if values['-RATIO-']=='' else values['-RATIO-'] , None if values['-SLANT-']=='' else values['-SLANT-'], values['-FIT-'], values['-CLAHE_ONLY-'], values['-PM-'], False, values['-LINEADJ-'] #MattC force False for values['-HFLIP-']
 
 """
 -------------------------------------------------------------------------------------------
@@ -181,8 +182,8 @@ options = {
 'clahe_only' : True,
 'disk_display' : False, #protus
 'pixel_bandwidth' : 1 #MattC
-#'hflip' : False, #MattC
-#'phasecorr' : False #MattC
+'hflip' : False, #MattC
+'phasecorr' : False #MattC
 }
 
 flag_dictionnary = {
@@ -203,7 +204,7 @@ if len(sys.argv)>1 :
             if argument.split('.')[-1].upper()=='SER' or argument.split('.')[-1].upper()=='AVI': #MattC
                 serfiles.append(argument)
     print('these files are going to be processed : ', serfiles) #MattC
-#print('Processing will begin with values : \n shift %s, flag_display %s, "%s", slant_fix "%s", save_fit %s, clahe_only %s, disk_display %s, pixel_bandwidth %s' %(options['shift'], options['flag_display'], options['ratio_fixe'], options['slant_fix'], options['save_fit'], options['clahe_only'], options['disk_display'], options['pixel_bandwidth'] ) #MattC removed hflip phasecorr
+#print('Processing will begin with values : \n shift %s, flag_display %s, "%s", slant_fix "%s", save_fit %s, clahe_only %s, disk_display %s, pixel_bandwidth %s, hflip %s, phasecorr %s' %(options['shift'], options['flag_display'], options['ratio_fixe'], options['slant_fix'], options['save_fit'], options['clahe_only'], options['disk_display'], options['pixel_bandwidth'], options['hflip'], options['phasecorr'] ) #MattC
 
 # check for .ini file for working directory           
 try:
@@ -216,7 +217,7 @@ except:
     
 # if no command line arguments, open GUI interface
 if len(serfiles)==0 : 
-    serfiles, shift, flag_display, ratio_fixe, slant_fix, save_fit, clahe_only, pixel_bandwidth =UI_SerBrowse(WorkDir) #TODO as options is defined as global, only serfiles could be returned #MattC removed hflip phasecorr
+    serfiles, shift, flag_display, ratio_fixe, slant_fix, save_fit, clahe_only, pixel_bandwidth, hflip, phasecorr =UI_SerBrowse(WorkDir) #TODO as options is defined as global, only serfiles could be returned #MattC removed hflip phasecorr
     try :
         shift_choice = shift.split(':')
         if len(shift_choice) == 1:
@@ -249,9 +250,8 @@ if len(serfiles)==0 :
         sys.exit()
     options['save_fit'] = save_fit
     options['clahe_only'] = clahe_only
-    #options['phasecorr'] = phasecorr #MattC
-    #options['hflip'] = hflip #MattC
-    #print('PHASECORR : ', phasecorr) #MattC
+    options['phasecorr'] = phasecorr #MattC
+    options['hflip'] = hflip #MattC
     serfiles=serfiles.split(';')
 
 #pour gerer la tempo des affichages des images resultats dans cv2.waitKey
