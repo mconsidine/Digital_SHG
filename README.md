@@ -1,10 +1,10 @@
-This is a highly experimental version of the Solex_ser_recon, authored by Valerie Desnoux and modified the thelondonsmiths, et al
+This is a highly experimental version of the Solex_ser_recon, authored by Valerie Desnoux and heavily modified by the thelondonsmiths, et al
 The goal here is to test the addition of features such as bandwidth selection found in Wah's SLiM code, as well as support 8bit
 versions of AVI and SER files.  Experimental turbulence adjustment code is being worked on but not included here.  There may be 
 other modifications as well.
 
-Solar disk reconstruction from SHG (spectroheliography) SER files.
-If no spectral line can recognised in the SER file, the program will stop.
+Solar disk reconstruction from SHG (spectroheliography) SER and AVI files.
+If no spectral line can recognised in the video file, the program will stop.
 
 Install the most recent version of Python from python.org. During Windows installation, check the box to update the PATH.
 
@@ -12,10 +12,10 @@ For Windows, double click the windows_setup file to install the needed Python li
 
 Usage:
 
-Graphical user interface: launch SHG_MAIN (by double clicking under Windows). A Windows Desktop shortcut can also be created.
-In the Python GUI window, enter the name of the SER file(s) to be processed. Batch processing is possible but will halt if a file is unsuitable.
+Graphical user interface: launch DIGITAL_SHG (by double clicking under Windows). A Windows Desktop shortcut can also be created.
+In the Python GUI window, enter the name of the video file(s) to be processed. Batch processing is possible but will halt if a file is unsuitable.
 
-Command line interface: python SHG_MAIN.py your_ser_file1.SER [your_ser_file2.SER ... if batch processing]
+Command line interface: python DIGITAL_SHG.py your_ser_file1.ext [your_ser_file2.ext ... if batch processing]
 
 Command line options:
 - d : display all graphics
@@ -27,9 +27,9 @@ Command line options:
 Check the "Show graphics" box for a 'live view' reconstruction display, a graphic of the geometry correction and a quick view of the final images.
 This will increase processing time significantly. This feature is not recommended for batch processing.
 
-If the "Save .fits files" box is checked, the following files will be stored in the same directory as the SER file:
+If the "Save .fits files" box is checked, the following files will be stored in the same directory as the video file:
 
-- xx_mean.fits: average image of all the frames in the SER video of the spectral line
+- xx_mean.fits: average image of all the frames in the video video of the spectral line
 - xx_img.fits: raw image reconstruction
 - xx_corr.fits: image corrected for outliers
 - xx_flat.fits: corrected flat image
