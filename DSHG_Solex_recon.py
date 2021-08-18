@@ -496,6 +496,8 @@ def correct_transversalium(img, flag_nobords, options, not_fake):
  
     
     Smoothed2=savgol_filter(ToSpline,301, 3) # window size, polynomial order
+    Smoothed2[ToSpline==np.min(ToSpline)]=0 #MattC
+
     #best fit d'un polynome degre 4
     np_m=np.asarray(ToSpline)
     ym=np_m.T
