@@ -17,9 +17,10 @@ from DSHG_solex_util import *
 from DSHG_ser_read_video import *
 from DSHG_ellipse_to_circle_JFP import ellipse_to_circle, correct_image
 #import numpy_indexed as npi #MattC
-import astropy.units as u
-from astropy.time import Time
-from astropy.coordinates import SkyCoord, EarthLocation, get_sun, AltAz
+from scipy import signal, fftpack #MattC
+import astropy.units as u #MattC
+from astropy.time import Time #MattC
+from astropy.coordinates import SkyCoord, EarthLocation, get_sun, AltAz #MattC
 
 # read video and return constructed image of sun using fit and LineRecal
 '''
@@ -231,7 +232,6 @@ def read_video_improved(serfile, fit, LineRecal, options):
     if rdr.infiledatatype == 'uint8': #MattC deal with AVI scale
         for i in range(len(options['shift'])):
             disk_list[i] = (disk_list[i]*(64000/255)).astype('uint16')
-            print('Max Min : ', np.max(disk_list[i]), np.min(disk_list[i]))
     return disk_list, ih, iw, rdr.FrameCount
 
 def make_header(rdr):        
@@ -250,7 +250,7 @@ def make_header(rdr):
     return hdr
 
 # compute mean image of video
-def compute_mean(serfile):
+def compute_mean(serfile, options): #MattC
     """IN : serfile path"
     OUT :numpy array
     """
@@ -258,9 +258,62 @@ def compute_mean(serfile):
     logme('Width, Height : '+str(rdr.Width)+' '+str(rdr.Height)) 
     logme('Number of frames : '+str(rdr.FrameCount))
     my_data = np.zeros((rdr.ih, rdr.iw),dtype='uint64')
+    if options['phasecorr'] == True: #MattC turb corr
+        my_shift_data = np.zeros((rdr.FrameCount),dtype='int16') #NOTE: need a signed int here
+        testcount = 0
+        non = lambda s: s if s<0 else None
+        mom = lambda s: max(0,s)
+        
     while rdr.has_frames():
         img = rdr.next_frame()
-        my_data += img
+
+        if options['phasecorr'] == True:
+            #phase correlation for shifts: https://stackoverflow.com/questions/4688715/find-time-shift-between-two-similar-waveforms
+            if testcount == 0: #MattC https://stackoverflow.com/questions/35567906/how-to-apply-phase-correlation-in-1d-signal
+                #establish the slice from which movement is judged
+                '''
+                fft_sig1 = np.fft.fft(img[rdr.ih//2,:])
+                '''
+                fft_sig1 = fftpack.fft(img[rdr.ih//2,:])
+                Ar = -fft_sig1.conjugate()
+                my_shift_data[testcount] = 0
+                shift_img = img
+                baseimg = img[rdr.ih//2,:]
+            else:
+                '''
+                fft_sig2 = np.fft.fft(img[rdr.ih//2,:])
+                fft_sig2_conj = np.conj(fft_sig2)
+                R = (fft_sig1 * fft_sig2_conj) / abs(fft_sig1 * fft_sig2_conj)
+                r = np.fft.ifft(R)
+                pix_shift = np.argmax(r)
+                if testcount % 500 == 0:
+                    print('pixel shift = ', testcount, pix_shift)
+                my_shift_data[testcount] = pix_shift
+                '''
+                
+                fft_sig2 = fftpack.fft(img[rdr.ih//2,:])
+                Br = -fft_sig2.conjugate()
+                pix_shift = np.argmax(np.abs(fftpack.ifft(Ar*fft_sig2)))
+                ##pix_shift2 = np.argmax(np.abs(fftpack.ifft(fft_sig1*Br)))
+                if pix_shift > rdr.Height//2:
+                    pix_shift = pix_shift-rdr.Height
+                my_shift_data[testcount] = pix_shift               
+                #NOTE: I have no idea yet if this is really working; shift data still needs to go to Disk
+                ox = 0
+                oy = pix_shift
+
+                shift_img = np.zeros_like(img)
+                shift_img[mom(oy):non(oy), mom(ox):non(ox)] = img[mom(-oy):non(-oy), mom(-ox):non(-ox)]
+                #if testcount % 1000 == 0:
+                #    print('new relative to base, ahead by ', testcount, pix_shift)
+                #    print('test ', np.argmax(signal.correlate(baseimg,img[rdr.ih//2,:])))
+                #    print('test2 ', np.argmax(signal.correlate(baseimg,shift_img)))
+                
+            testcount += 1 #MattC               
+            my_data += img #MattC this should be shift_img and shift data should be passed back so that smile calc/fit can accomodate
+            
+        else:
+            my_data += img
     return (my_data / rdr.FrameCount).astype(rdr.infiledatatype) #MattC
 
 def compute_mean_return_fit(serfile, options, LineRecal = 1): 
@@ -279,7 +332,7 @@ def compute_mean_return_fit(serfile, options, LineRecal = 1):
     flag_display = options['flag_display']
     # first compute mean image
     # rdr is the ser_reader object
-    mean_img= compute_mean(serfile)
+    mean_img= compute_mean(serfile, options) #MattC
 
     """
     ----------------------------------------------------------------------------

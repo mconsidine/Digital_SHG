@@ -181,7 +181,7 @@ options = {
 'save_fit' : False,
 'clahe_only' : True,
 'disk_display' : False, #protus
-'pixel_bandwidth' : 1 #MattC
+'pixel_bandwidth' : 1, #MattC
 'hflip' : False, #MattC
 'phasecorr' : False #MattC
 }
