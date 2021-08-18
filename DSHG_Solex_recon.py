@@ -315,10 +315,7 @@ def compute_mean(serfile, options): #MattC
     #for col, data in enumerate(my_shift_data.T):
     #    worksheet.write_column(row, col, data)
     #workbook.close()   
-    print('my data shape : ',my_data.shape) 
-    print('its min : ',np.min(my_data))
-    print('its max : ',np.max(my_data))
-    print(my_shift_data[0:50])
+
     return (my_data / rdr.FrameCount).astype(rdr.infiledatatype) #MattC
 
 def compute_mean_return_fit(serfile, options, LineRecal = 1): 
