@@ -111,25 +111,37 @@ def UI_SerBrowse (WorkDir):
     sg.theme('Dark2')
     sg.theme_button_color(('white', '#500000'))
     
-    layout = [
-    [sg.Text('Video file name(s)', size=(15, 1)), sg.InputText(default_text='',size=(75,1),key='-FILE-'),
+    tab1_layout = [[sg.Text('Video file name(s)', size=(15, 1)), sg.InputText(default_text='',size=(75,1),key='-FILE-'),
      sg.FilesBrowse('Open',file_types=(("SER Files", "*.ser"),("AVI Files", "*.avi"),),initial_folder=WorkDir)],
-    [sg.Checkbox('Show graphics', default=False, key='-DISP-')],
-    [sg.Checkbox('Save .fits files', default=False, key='-FIT-')],
-    [sg.Checkbox('Save CLAHE.png only', default=False, key='-CLAHE_ONLY-')],
-    [sg.Text('Y/X ratio (blank for auto)', size=(20,1)), sg.Input(default_text='', size=(8,1),key='-RATIO-')],
-    [sg.Text('Tilt angle (blank for auto)',size=(20,1)),sg.Input(default_text='',size=(8,1),key='-SLANT-',enable_events=True)],
-    [sg.Text('Pixel offset',size=(20,1)),sg.Input(default_text='0',size=(8,1),key='-DX-',enable_events=True)],
-    [sg.Text('Pixel margin (half desire bandwidth',size=(30,1)),sg.Input(default_text='1',size=(8,1),key='-PM-',enable_events=True)], #MattC
-    #[sg.Checkbox('Adj for turb? NotWorking', size=(30,1),default=False, key='-LINEADJ-')],    
-    #[sg.Checkbox('Alt ellipse code?', size=(30,1),default=False, key='-HFLIP-')],     
-    [sg.Button('OK'), sg.Cancel()]
-    ] 
+                   [sg.Checkbox('Show graphics', default=False, key='-DISP-')],
+                   [sg.Checkbox('Save .fits files', default=False, key='-FIT-')],
+                   [sg.Checkbox('Save CLAHE.png only', default=False, key='-CLAHE_ONLY-')],
+                   [sg.Text('Y/X ratio (blank for auto)', size=(20,1)), sg.Input(default_text='', size=(8,1),key='-RATIO-')],
+                   [sg.Text('Tilt angle (blank for auto)',size=(20,1)),sg.Input(default_text='',size=(8,1),key='-SLANT-',enable_events=True)],
+                   [sg.Text('Pixel offset',size=(20,1)),sg.Input(default_text='0',size=(8,1),key='-DX-',enable_events=True)]]
     
-    window = sg.Window('Processing', layout, finalize=True)
+    tab2_layout =[[sg.Text('Pixel margin (half desire bandwidth',size=(30,1)),sg.Input(default_text='1',size=(8,1),key='-PM-',enable_events=True)],
+                  [sg.Checkbox('Adj for turb? NotWorking', size=(30,1),default=False, key='-LINEADJ-')],    
+                  [sg.Checkbox('Alt ellipse code?', size=(30,1),default=False, key='-HFLIP-')]]
+    
+    tab_group_layout =[[sg.Tab('General', tab1_layout, key='-TAB1-'),
+                        sg.Tab('Experimental', tab2_layout, title_color='red', key='-TAB2-'),
+                        ]]
+    layout = [[sg.TabGroup(tab_group_layout,
+                       tab_background_color='gray',
+                       selected_title_color='black', 
+                       selected_background_color='white',
+                       enable_events=True,
+                       key='-TABGROUP-')],
+              #[sg.Text('Make tab number'), sg.Input(key='-IN-', size=(3,1)), sg.Button('Invisible'), sg.Button('Visible'), sg.Button('Select')],
+              [sg.Button('OK'), sg.Cancel()],
+              ]
+    
+    window = sg.Window('Digital SHG', layout, finalize=True)
     window['-FILE-'].update(WorkDir) 
     window.BringToFront()
     
+    tab_keys = ('-TAB1-','-TAB2-') 
     while True:
         event, values = window.read()
         if event==sg.WIN_CLOSED or event=='Cancel': 
@@ -137,7 +149,14 @@ def UI_SerBrowse (WorkDir):
         
         if event=='OK':
             break
-
+        '''
+        if event == 'Invisible':
+            window[tab_keys[int(values['-IN-'])-1]].update(visible=False)
+        if event == 'Visible':
+            window[tab_keys[int(values['-IN-'])-1]].update(visible=True)
+        if event == 'Select':
+            window[tab_keys[int(values['-IN-'])-1]].select()
+        '''
     window.close()
                
     FileNames=values['-FILE-']
