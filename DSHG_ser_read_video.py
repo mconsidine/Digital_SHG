@@ -32,7 +32,7 @@ class ser_reader:
             self.FileID=np.fromfile(serfile, dtype='int8',count=14)
             offset=14
 
-            self.LuID=np.fromfile(serfile, dtype=np.uint32, count=1, offset=offset)
+            self.LuID=np.fromfile(serfile, dtype='uint32', count=1, offset=offset)
             offset=offset+4
         
             self.ColorID=np.fromfile(serfile, dtype='uint32', count=1, offset=offset)
@@ -54,16 +54,16 @@ class ser_reader:
             FrameCount=np.fromfile(serfile, dtype='uint32', count=1,offset=offset)
             self.FrameCount=FrameCount[0]
             #mattc ...
-            b=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
-            Observer=b.tobytes().decode()
+            self.Observer=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
+            #Observer=b.tobytes().decode()
             offset=offset+40
 
-            b=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
-            Instrument=b.tobytes().decode()
+            self.Instrument=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
+            #Instrument=b.tobytes().decode()
             offset=offset+40
    
-            b=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
-            Telescope=b.tobytes().decode()
+            self.Telescope=np.fromfile(serfile, dtype='int8',count=40,offset=offset)
+            #Telescope=b.tobytes().decode()
             offset=offset+40
    
             DTime=np.fromfile(serfile, dtype='int64', count=1,offset=offset)
