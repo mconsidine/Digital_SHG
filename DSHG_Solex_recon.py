@@ -21,7 +21,7 @@ from scipy import signal, fftpack #MattC
 import astropy.units as u #MattC
 from astropy.time import Time #MattC
 from astropy.coordinates import SkyCoord, EarthLocation, get_sun, AltAz #MattC
-import xlsxwriter #MattC
+#import xlsxwriter #MattC
 
 # read video and return constructed image of sun using fit and LineRecal
 '''
@@ -496,7 +496,7 @@ def correct_transversalium(img, flag_nobords, options, not_fake):
  
     
     Smoothed2=savgol_filter(ToSpline,301, 3) # window size, polynomial order
-    Smoothed2[ToSpline==np.min(ToSpline)]=0 #MattC
+    Smoothed2[ToSpline==np.min(ToSpline)]=0.01 #MattC
 
     #best fit d'un polynome degre 4
     np_m=np.asarray(ToSpline)
@@ -678,7 +678,7 @@ def solex_proc(serfile, options):
     frames_circularized = []
     for i in range(len(disk_list)):
         basefich = basefich0 + '_hbw='+str(options['pixel_bandwidth']) + '_shift='+str(options['shift'][i]) #MattC
-
+        #disk_list[i] = np.fliplr(disk_list[i]) #MattC
         if options['save_fit'] and i >= 2:
             DiskHDU=fits.PrimaryHDU(disk_list[i],header=hdr)
             DiskHDU.writeto(basefich+'_img.fits', overwrite='True')

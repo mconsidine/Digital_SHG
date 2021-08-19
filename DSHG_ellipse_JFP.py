@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as la
 
-__version__ = '2.0.2'
+__version__ = '3.0.1'
 
 
 class LsqEllipse:
@@ -35,7 +35,6 @@ class LsqEllipse:
 
     def __init__(self):
         self.coef_ = None
-        print('using LsqEllipse from JFP ...')
 
     def _check_data(self, X):
 
@@ -55,7 +54,8 @@ class LsqEllipse:
 
         Parameters
         ----------
-        X : array, shape (n_points, 2)            Data values for the x-y data pairs to fit
+        X : array, shape (n_points, 2)
+            Data values for the x-y data pairs to fit
 
         Returns
         -------
@@ -89,7 +89,10 @@ class LsqEllipse:
         eigval, eigvec = np.linalg.eig(M)
 
         # Eigenvector must meet constraint 4ac - b^2 to be valid.
-        cond = (4*np.multiply(eigvec[0, :], eigvec[2, :]) - np.power(eigvec[1, :], 2) )
+        cond = (
+            4*np.multiply(eigvec[0, :], eigvec[2, :])
+            - np.power(eigvec[1, :], 2)
+        )
         a1 = eigvec[:, np.nonzero(cond > 0)[0]]
 
         # |d f g> = -S3^(-1) * S2^(T)*|a b c> [eqn. 24]
@@ -98,7 +101,7 @@ class LsqEllipse:
         # Eigenvectors |a b c d f g>
         # list of the coefficients describing an ellipse [a,b,c,d,f,g]
         # corresponding to ax**2 + 2bxy + cy**2 + 2dx + 2fy + g
-        if (a1[0] < 0):                                                     # modified, change the signum in case < 0
+        if (a1[0] < 0):                                                     #change the signum in case < 0
             a1 = -a1
             a2 = -a2
         self.coef_ = np.vstack([a1, a2])
@@ -107,7 +110,8 @@ class LsqEllipse:
 
     @property
     def coefficients(self):
-        """List of the coefficients describing the fitted ellipse
+        """
+        List of the coefficients describing the fitted ellipse
 
         Returns
         -------
@@ -116,26 +120,31 @@ class LsqEllipse:
         return np.asarray(self.coef_).ravel()
 
     def as_parameters(self):
-        """ Returns the definition of the fitted ellipse as localized parameters
+        """Returns the definition of the fitted ellipse as localized parameters
 
         Returns
-        -------
-        center  : list      [x0, y0]
-        width   : float     Semimajor axis
-        height  : float     Semiminor axis
-        phi     : float     The counterclockwise angle of rotation from the x-axis to the major axis of the ellipse
+        _______
+        center : list
+            [x0, y0]
+        width : float
+            Semimajor axis
+        height : float
+            Semiminor axis
+        phi : float
+            The counterclockwise angle of rotation from the x-axis to the major
+            axis of the ellipse
         """
 
         # Eigenvectors are the coefficients of an ellipse in general form
         # a*x^2 + 2*b*x*y + c*y^2 + 2*d*x + 2*f*y + g = 0
-        # [eqn. 15) from (**) or (***) 
+        # [eqn. 15) from (**) or (***)
         a = self.coefficients[0]
         b = self.coefficients[1] / 2.0
         c = self.coefficients[2]
         d = self.coefficients[3] / 2.0
         f = self.coefficients[4] / 2.0
         g = self.coefficients[5]
-
+        
         # Finding center of ellipse [eqn.19 and 20] from (**)
         x0 = (c*d - b*f) / (b*b - a*c)          
         y0 = (a*f - b*d) / (b*b - a*c)          
@@ -145,7 +154,7 @@ class LsqEllipse:
         numerator = 2.0 * (a*f*f + c*d*d + g*b*b - 2.0*b*d*f - a*c*g)   
         
         denominator1 = (b*b - a*c) * (np.sqrt((a - c)*(a - c) + 4.0*b*b) - (a + c))                 
-       
+        
         denominator2 = (b*b - a*c) * (-np.sqrt((a - c)*(a - c) + 4.0*b*b) - (a + c))              
         
         width  = np.sqrt(numerator / denominator1)
@@ -154,33 +163,28 @@ class LsqEllipse:
         # Angle of counterclockwise rotation of major-axis of ellipse to x-axis
         # [eqn. 23] from (**) or [eqn. 26] from (***).
 
-        #if b==0 : 
-        #    phi=0 
-        #else : 
-        #    phi = 0.5 * np.arctan((2.0*b) / (a - c))
-        #if (a>c):                                       
-        #    phi = phi + 0.5*np.pi
-
-        if (b == 0 and a < c):                  # modified, calculate with the b == 0 condition
+        if (b == 0 and a < c):                  #calculate with the b == 0 condition
             phi = 0.0
 
         if (b == 0 and a > c):
             phi = 0.5 * np.pi
 
-        if (b != 0 and a != c):                 # modified, calculate with the a > c condition
+        if (b != 0 and a != c):                 #calculate with the a > c condition
             if (a < c):
                 phi = 0.5 * np.arctan((2.0 * b) / (a - c))
             if (a > c):
                 phi = 0.5 * np.pi + 0.5 * np.arctan((2.0 * b) / (a - c))
 
-        if (a == c):                            # modified, add the case of a circle, "undefined" is the right value
+        if (a == c):                            # add the case of a circle, "undefined" is the right value
             phi = 0.0
+      
 
         return center, width, height, phi
         
     # Add a function that shows the ellipse coefficients
     def ellipse_coeff(self):
-        """List of the coefficients describing the fitted ellipse
+        """
+        List of the coefficients describing the fitted ellipse
 
         Returns
         -------
@@ -204,8 +208,11 @@ class LsqEllipse:
 
         Parameters
         ---------
-        n_points:   int     Number of points to return
-        t       :   array   Parametric points used to generate x-y pairs, If provided, `n_points` will be ignored
+        n_points : int
+            Number of points to return
+        t : array
+            Parametric points used to generate x-y pairs, If provided,
+            `n_points` will be ignored
 
         Returns
         -------
